@@ -6,11 +6,30 @@ import {
 } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { createRoom } from '../functions/create-room.ts'
+import { enterRoom } from '../functions/enter-room.ts'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
+
+app.get(
+  '/rooms/:shortId',
+  {
+    schema: {
+      params: z.object({
+        shortId: z.string(),
+      }),
+    },
+  },
+  async request => {
+    const { shortId } = request.params
+
+    const room = await enterRoom({ shortId })
+
+    return room
+  }
+)
 
 app.post(
   '/rooms',
