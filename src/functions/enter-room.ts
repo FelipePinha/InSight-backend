@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, and, sql } from 'drizzle-orm'
 import { db } from '../db/index.ts'
 import { answers, rooms } from '../db/schema.ts'
 
@@ -8,14 +8,24 @@ interface EnterRoomRequest {
 
 export async function enterRoom({ shortId }: EnterRoomRequest) {
   const result = await db
-    .select()
+    .select({
+      id: rooms.id,
+      shortId: rooms.shortId,
+      question: rooms.question,
+      answers: sql`ARRAY_AGG(json_build_object(
+        'id', ${answers.id},
+        'roomId', ${answers.roomId},
+        'answer', ${answers.answer}
+      ))`,
+    })
     .from(rooms)
-    .where(eq(rooms.shortId, shortId))
-    .leftJoin(answers, eq(rooms.id, answers.roomId))
+    .innerJoin(answers, eq(rooms.id, answers.roomId))
+    .where(and(eq(rooms.shortId, shortId)))
+    .groupBy(rooms.id, rooms.shortId, rooms.question)
 
-  const room = result[0]
+  const room = result
 
   return {
-    room,
+    data: room,
   }
 }
