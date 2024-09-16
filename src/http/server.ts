@@ -7,6 +7,7 @@ import {
 import { z } from 'zod'
 import { createRoom } from '../functions/create-room.ts'
 import { enterRoom } from '../functions/enter-room.ts'
+import { createAnswer } from '../functions/create-answer.ts'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
@@ -46,6 +47,23 @@ app.post(
     const room = await createRoom({ question })
 
     return reply.status(201).send(room)
+  }
+)
+
+app.post(
+  '/answer',
+  {
+    schema: {
+      body: z.object({
+        answer: z.string(),
+        roomId: z.string(),
+      }),
+    },
+  },
+  async request => {
+    const { answer, roomId } = request.body
+
+    await createAnswer({ answer, roomId })
   }
 )
 
