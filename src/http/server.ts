@@ -8,11 +8,14 @@ import { z } from 'zod'
 import { createRoom } from '../functions/create-room.ts'
 import { enterRoom } from '../functions/enter-room.ts'
 import { createAnswer } from '../functions/create-answer.ts'
+import cors from '@fastify/cors'
 
 export const app = fastify().withTypeProvider<ZodTypeProvider>()
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
+
+await app.register(cors, {})
 
 app.get(
   '/rooms/:shortId',
