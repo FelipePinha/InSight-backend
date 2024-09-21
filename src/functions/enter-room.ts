@@ -12,14 +12,19 @@ export async function enterRoom({ shortId }: EnterRoomRequest) {
       id: rooms.id,
       shortId: rooms.shortId,
       question: rooms.question,
-      answers: sql`ARRAY_AGG(json_build_object(
-        'id', ${answers.id},
-        'roomId', ${answers.roomId},
-        'answer', ${answers.answer}
-      ))`,
+      answers: sql`COALESCE(
+                    ARRAY_AGG(
+                        json_build_object(
+                            'id', answers.id,
+                            'roomId', answers.room_id,
+                            'answer', answers.answer
+                        ) 
+                    ) FILTER (WHERE answers.id IS NOT NULL), 
+                    '{}'
+                  ) AS answers`,
     })
     .from(rooms)
-    .innerJoin(answers, eq(rooms.id, answers.roomId))
+    .leftJoin(answers, eq(rooms.id, answers.roomId))
     .where(and(eq(rooms.shortId, shortId)))
     .groupBy(rooms.id, rooms.shortId, rooms.question)
 
